@@ -1,0 +1,42 @@
+#!/bin/bash
+
+exec 5> >(logger -t $0)
+BASH_XTRACEFD="5"
+PS4='$LINENO: '
+set -x
+
+max_brightness=$(cat /sys/class/backlight/intel_backlight/max_brightness)
+#line="some sample error line"
+#echo "arguements $@"
+#echo "A1 - $1"
+fb=500
+
+re='^[0-9]+$'
+if ! [[ $1 =~ $re ]] ; then
+	#not a number, So can be -max or -min else ERROR:
+	if [ $1 == '-max' ]; then
+		fb=$max_brightness
+	elif [ $1 == '-min' ]; then
+		fb=100
+	else
+		echo -e "\033[31m Invalid flag $1 : use \033[0m '-max'\033[31m or \033[0m '-min' "
+		echo -e "\033[31m Setting brightness to default : \033[0m $fb"
+	fi
+else
+	#number here
+	if [[ $1 -lt 100 || $1 -gt 937 ]]; then
+		#echo -e "\033[31m$line\033[0m"
+		echo -e "\033[31m Please enter brightness value in b/w 100 - $max_brightness"
+		#echo -e "\033[0m"
+		exit 1
+	else
+		#valid number
+		fb=$1
+	fi
+fi
+
+
+
+brightness=/sys/class/backlight/intel_backlight/brightness
+echo $fb > $brightness
+set +x
